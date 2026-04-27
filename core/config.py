@@ -115,6 +115,9 @@ class PluginConfig(ConfigNode):
     judge_provider_id: str
     emoji_interval: float
     emotions_mapping_list: list[str]
+    reaction_follow_enabled: bool
+    reaction_follow_prob: float
+    reaction_follow_dedupe_seconds: float
 
     _plugin_name = "astrbot_plugin_emoji_like"
 

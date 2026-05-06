@@ -59,5 +59,33 @@
             "step": 0.1
         },
         "default": 0.4
+    },
+    "reaction_follow_enabled": {
+        "description": "是否跟随群友贴表情反应",
+        "hint": "开启后，当群友给某条消息贴表情反应时，Bot 会按概率自动贴上相同的表情",
+        "type": "bool",
+        "default": true
+    },
+    "reaction_follow_prob": {
+        "description": "跟随群友贴表情反应的概率",
+        "hint": "群友给消息贴表情反应时，Bot 跟随贴相同表情的概率。建议不要设太高，避免过于频繁",
+        "type": "float",
+        "slider": {
+            "min": 0,
+            "max": 1,
+            "step": 0.001
+        },
+        "default": 0.3
+    },
+    "reaction_follow_dedupe_seconds": {
+        "description": "表情反应跟随去重时间窗口（秒）",
+        "hint": "同一消息同一表情在该时间窗口内只跟随一次，防止短时间内重复跟随",
+        "type": "float",
+        "slider": {
+            "min": 0,
+            "max": 60,
+            "step": 1
+        },
+        "default": 10
     }
 }

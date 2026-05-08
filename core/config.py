@@ -112,6 +112,7 @@ class ConfigNode:
 class PluginConfig(ConfigNode):
     emoji_follow_prob: float
     emoji_like_prob: float
+    emoji_like_trigger_keywords: list[str] | None
     judge_provider_id: str
     emoji_interval: float
     emotions_mapping_list: list[str]
@@ -132,6 +133,12 @@ class PluginConfig(ConfigNode):
         self.min_emoji_id = 1
         self.max_emoji_id = 434
         self.emoji_pool = list(range(self.min_emoji_id, self.max_emoji_id))
+        trigger_keywords = self.emoji_like_trigger_keywords or []
+        self.normalized_emoji_like_trigger_keywords = [
+            item.strip()
+            for item in trigger_keywords
+            if isinstance(item, str) and item.strip()
+        ]
 
         self.emotion_mapping = self.parse_mapping_list()
         self.emotion_labels: list[str] = list(self.emotion_mapping.keys())

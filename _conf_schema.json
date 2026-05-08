@@ -11,8 +11,8 @@
         "default": 0.3
     },
     "emoji_like_prob": {
-        "description": "对消息贴表情的概率",
-        "hint": "设太高群友会很烦，设太低则难以触发贴表情.(补充: 对于唤醒Bot的消息插件已自动忽略，以防对唤醒造成干扰)",
+        "description": "触发 Bot 时贴表情的概率",
+        "hint": "仅当群消息 @Bot、回复 Bot、或包含配置的唤醒词/Bot 名字时，才会按该概率给触发者消息贴 1 个表情。普通群消息不会随机触发。",
         "type": "float",
         "slider": {
             "min": 0,
@@ -20,6 +20,12 @@
             "step": 0.001
         },
         "default": 0.03
+    },
+    "emoji_like_trigger_keywords": {
+        "description": "触发表情贴贴的关键词",
+        "hint": "填写 Bot 名字、昵称或唤醒词。群消息包含这些文本时，会被视为触发 Bot。@Bot 和 AstrBot 识别的唤醒命令无需填写也会自动识别。",
+        "type": "list",
+        "default": []
     },
     "judge_provider_id": {
         "description": "判断情感用的LLM提供商",

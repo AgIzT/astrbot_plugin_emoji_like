@@ -78,19 +78,83 @@ class EmojiLikePlugin(Star):
     @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
     async def on_message(self, event: AiocqhttpMessageEvent):
         """群消息监听"""
-        if event.is_at_or_wake_command:
-            return
+        chain = event.get_messages()
 
         # 跟随已有表情
-        chain = event.get_messages()
         emoji_ids = [seg.id for seg in chain if isinstance(seg, Face)]
         if emoji_ids and random.random() < self.cfg.emoji_follow_prob:
             await self._emoji_like(event, emoji_ids)
 
-        # 主动表情
+        # 仅在消息明确触发 Bot 回复时主动贴表情
         msg = event.message_str
-        if msg and random.random() < self.cfg.emoji_like_prob:
-            asyncio.create_task(self.async_emoji_like_by_emotion(event, msg))
+        if not msg:
+            return
+
+        if not await self._is_bot_reply_trigger(event, chain, msg):
+            return
+
+        if random.random() < self.cfg.emoji_like_prob:
+            asyncio.create_task(
+                self.async_emoji_like_by_emotion(
+                    event,
+                    msg,
+                    message_id=event.message_obj.message_id,
+                )
+            )
+
+    async def _is_bot_reply_trigger(
+        self,
+        event: AiocqhttpMessageEvent,
+        chain: list,
+        msg: str,
+    ) -> bool:
+        return (
+            self._is_at_or_wake(event)
+            or await self._is_reply_to_bot(event, chain)
+            or self._contains_trigger_keyword(msg)
+        )
+
+    def _is_at_or_wake(self, event: AiocqhttpMessageEvent) -> bool:
+        return bool(getattr(event, "is_at_or_wake_command", False))
+
+    async def _is_reply_to_bot(self, event: AiocqhttpMessageEvent, chain: list) -> bool:
+        reply = next((seg for seg in chain if isinstance(seg, Reply)), None)
+        if not reply or not reply.id:
+            return False
+
+        raw = getattr(event.message_obj, "raw_message", None)
+        self_id = _raw_get(raw, "self_id") if raw is not None else None
+        if not self_id:
+            return False
+
+        try:
+            replied_msg = await event.bot.get_msg(message_id=reply.id)
+        except Exception as e:
+            logger.debug(f"获取回复消息失败: {e}")
+            return False
+
+        sender_id = None
+        if isinstance(replied_msg, dict):
+            sender = replied_msg.get("sender") or {}
+            if isinstance(sender, dict):
+                sender_id = sender.get("user_id")
+            sender_id = sender_id or replied_msg.get("user_id")
+        else:
+            sender = getattr(replied_msg, "sender", None)
+            if isinstance(sender, dict):
+                sender_id = sender.get("user_id")
+            else:
+                sender_id = getattr(sender, "user_id", None)
+            sender_id = sender_id or getattr(replied_msg, "user_id", None)
+
+        return str(sender_id) == str(self_id)
+
+    def _contains_trigger_keyword(self, msg: str) -> bool:
+        text = msg.casefold()
+        return any(
+            keyword.casefold() in text
+            for keyword in self.cfg.normalized_emoji_like_trigger_keywords
+        )
 
     async def async_emoji_like_by_emotion(
         self,
